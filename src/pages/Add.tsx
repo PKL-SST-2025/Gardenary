@@ -101,12 +101,18 @@ export default function AddPlant() {
             onClick={() => setShowProfileMenu(!showProfileMenu())}
           />
           <Show when={showProfileMenu()}>
-            <div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-50">
-              <div class="py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer">Profile</div>
-              <div class="py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer">Settings</div>
-              <div class="py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer text-red-500">Logout</div>
-            </div>
-          </Show>
+              <div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-50">
+                <a href="/profile" class="block py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer">
+                  Profile
+                </a>
+                <a href="/settings" class="block py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer">
+                  Settings
+                </a>
+                <a href="/logout" class="block py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer text-red-500">
+                  Logout
+                </a>
+              </div>
+            </Show>
         </div>
 
         {/* Form Tambah Plant */}

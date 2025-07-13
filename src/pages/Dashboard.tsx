@@ -181,15 +181,15 @@ export default function Dashboard() {
             />
             <Show when={showProfileMenu()}>
               <div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-50">
-                <div class="py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer">
+                <a href="/profile" class="block py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer">
                   Profile
-                </div>
-                <div class="py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer">
+                </a>
+                <a href="/settings" class="block py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer">
                   Settings
-                </div>
-                <div class="py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer text-red-500">
+                </a>
+                <a href="/logout" class="block py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer text-red-500">
                   Logout
-                </div>
+                </a>
               </div>
             </Show>
           </div>
