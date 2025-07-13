@@ -1,0 +1,29 @@
+{
+  "name": "gardenary",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@amcharts/amcharts5": "^5.13.3",
+    "@solidjs/router": "^0.15.3",
+    "ag-grid-community": "^34.0.0",
+    "ag-grid-solid": "^31.1.1",
+    "flowbite": "^1.6.5",
+    "solid-js": "^1.9.7"
+  },
+  "devDependencies": {
+    "@solidjs/router": "^0.15.3",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "solid-js": "^1.9.7",
+    "tailwindcss": "^3.3.0",
+    "typescript": "~5.8.3",
+    "vite": "^6.0.4",
+    "vite-plugin-solid": "^2.11.6"
+  }
+}

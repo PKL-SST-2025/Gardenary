@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import 'flowbite';
+
+.input {
+  @apply w-full border border-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500;
+}
+
+@font-face {
+  font-family: 'Baloo';
+  src: url('./assets/font/Baloo-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
