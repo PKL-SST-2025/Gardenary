@@ -94,8 +94,8 @@ const Home: Component = () => {
       </div>
 
       {/* Placeholder Section */}
-      <div class="bg-green-800 text-white mt-[-100px] mx-auto max-w-5xl rounded-2xl p-16 shadow-lg relative z-10">
-        <p class="text-center">[Konten tambahan di sini]</p>
+      <div class="bg-green-800 text-white font-bold mt-[-100px] mx-auto max-w-5xl rounded-2xl p-16 shadow-lg relative z-10">
+        <p class="text-center text-2xl">GROW AND REALIZE YOUR PLANTS WITH GARDENARY</p>
       </div>
 
       {/* Features Section */}

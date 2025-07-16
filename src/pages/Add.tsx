@@ -70,7 +70,7 @@ export default function AddPlant() {
         <nav class="space-y-2 text-green-900 mt-4">
           <a href="/dashboard" class="flex items-center gap-2 hover:underline">🏠 Dashboard</a>
           <a href="/list" class="flex items-center gap-2 hover:underline">📋 List</a>
-          <a href="/add" class="flex items-center gap-2 hover:underline">➕ Add</a>
+          <a href="/add" class="flex items-center gap-2 hover:underline font-bold text-green-800">➕ Add</a>
           <a href="/growth" class="flex items-center gap-2 hover:underline">📈 Growth</a>
         </nav>
         <a href="/account" class="absolute bottom-4 left-4 text-sm text-gray-600 hover:underline">

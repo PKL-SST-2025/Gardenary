@@ -13,14 +13,13 @@
     "@solidjs/router": "^0.15.3",
     "ag-grid-community": "^34.0.0",
     "ag-grid-solid": "^31.1.1",
-    "flowbite": "^1.6.5",
-    "solid-js": "^1.9.7"
+    "flowbite": "^1.6.5"
   },
   "devDependencies": {
     "@solidjs/router": "^0.15.3",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
-    "solid-js": "^1.9.7",
+    "solid-js": "^1.8.14",
     "tailwindcss": "^3.3.0",
     "typescript": "~5.8.3",
     "vite": "^6.0.4",

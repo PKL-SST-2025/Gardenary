@@ -68,7 +68,7 @@ export default function YourPlants() {
         </a>
         <nav class="space-y-2 text-green-900 mt-4">
           <a href="/dashboard" class="flex items-center gap-2 hover:underline">🏠 Dashboard</a>
-          <a href="/list" class="flex items-center gap-2 hover:underline">📋 List</a>
+          <a href="/list" class="flex items-center gap-2 hover:underline font-bold text-green-800">📋 List</a>
           <a href="/add" class="flex items-center gap-2 hover:underline">➕ Add</a>
           <a href="/growth" class="flex items-center gap-2 hover:underline">📈 Growth</a>
         </nav>

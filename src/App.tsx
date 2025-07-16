@@ -7,6 +7,8 @@ import Dashboard from "./pages/Dashboard";
 import List from "./pages/List";
 import Add from "./pages/Add";
 import Logout from "./pages/Logout";
+import Growth from "./pages/Growth";
+import Profile from "./pages/Profile";
 
 const App: Component = () => {
   return (
@@ -18,6 +20,8 @@ const App: Component = () => {
       <Route path="/list" component={List} />
       <Route path="/add" component={Add} />
       <Route path="/logout" component={Logout} />
+      <Route path="/growth" component={Growth} />
+      <Route path="/profile" component={Profile} />
       {/* Optional fallback */}
       <Route path="*" component={Home} />
     </Router>
