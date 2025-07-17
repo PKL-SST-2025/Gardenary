@@ -3,6 +3,11 @@ import wateringImg from "../assets/watering.png";
 import paprikaImg from "../assets/paprika.png";
 import fertilizedImg from "../assets/fertilized.png";
 import profile from "../assets/profile.png";
+import { plants } from "../data/plantstore";
+import { getTodayDate } from "../data/date";
+import type { Plant } from "../data/plant";
+import { selectedDate, setSelectedDate } from "../data/calendarStore";
+
 
 // Komponen Card
 function Card(props: { image: string; title: string; value: number | string; active: boolean; imageBelow?: boolean }) {
@@ -16,26 +21,34 @@ function Card(props: { image: string; title: string; value: number | string; act
         <>
           <div>
             <h3 class="text-lg font-semibold">{props.title}</h3>
-            {typeof props.value === "number" && props.value > 0 && (
+            <Show when={typeof props.value === "number" && props.value > 0}>
               <p class="text-green-600 font-bold text-lg">: {props.value}</p>
-            )}
+            </Show>
+            <Show when={typeof props.value === "string"}>
+              <p class="text-sm text-gray-700">{props.value}</p>
+            </Show>
           </div>
-          <img src={props.image} alt="card-img" class="w-28 h-28 md:w-80 md:h-24" />
+          <img src={props.image} alt="card-img" class="w-28 h-28 md:w-80 md:h-24 object-contain" />
         </>
       ) : (
         <>
           <img src={props.image} alt="card-img" class="w-24 h-24 object-contain" />
           <div>
             <h3 class="text-lg font-semibold">{props.title}</h3>
-            {typeof props.value === "number" && props.value > 0 && (
+            <Show when={typeof props.value === "number" && props.value > 0}>
               <p class="text-green-600 font-bold text-lg">: {props.value}</p>
-            )}
+            </Show>
+            <Show when={typeof props.value === "string"}>
+              <p class="text-sm text-gray-700">{props.value}</p>
+            </Show>
           </div>
         </>
       )}
     </div>
   );
 }
+
+
 
 
 // Komponen Kalender
@@ -47,15 +60,22 @@ function Calendar() {
         {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((d) => (
           <div class="font-medium text-green-700">{d}</div>
         ))}
-        {Array.from({ length: 30 }).map((_, i) => (
-          <div
-            class={`py-1 rounded-full ${
-              i + 1 === 7 ? "bg-green-500 text-white" : ""
-            }`}
-          >
-            {i + 1}
-          </div>
-        ))}
+        {Array.from({ length: 30 }).map((_, i) => {
+        const day = i + 1;
+        const dateStr = `2025-07-${String(day).padStart(2, "0")}`;
+        const isSelected = selectedDate() === dateStr;
+
+        return (
+        <div
+      class={`py-1 rounded-full cursor-pointer hover:bg-green-200 transition ${
+        isSelected ? "bg-green-500 text-white font-bold" : ""
+      }`}
+      onClick={() => setSelectedDate(dateStr)}
+    >
+      {day}
+    </div>
+  );
+})}
       </div>
       <ul class="mt-4 space-y-1 text-sm text-gray-700">
         <li class="flex justify-between items-center"><span>🟢 Water</span><span>30min.</span></li>
@@ -85,6 +105,25 @@ export default function DashboardPage() {
     };
     document.addEventListener("click", handleClickOutside);
     onCleanup(() => document.removeEventListener("click", handleClickOutside));
+  });
+
+  const today = getTodayDate();
+
+  const unwateredCount = () =>
+  plants().filter((plant: Plant) => !plant.status?.[today]?.watered).length;
+
+  const unfertilizedCount = () =>
+  plants().filter((plant: Plant) => !plant.status?.[today]?.fertilized).length;
+
+  const unharvestedCount = () =>
+  plants().filter((plant: Plant) => !plant.status?.[today]?.harvested).length;
+
+  const hasHarvestReadyPlants = () =>
+  plants().some((plant: Plant) => {
+    const status = plant.status?.[today];
+
+
+    return status?.watered && status?.fertilized && !status?.harvested;
   });
 
   return (
@@ -163,20 +202,25 @@ export default function DashboardPage() {
             <Card
               image={wateringImg}
               title="Plants that need watering today"
-              value={wateringCount()}
-              active={wateringCount() > 0}
+              value={unwateredCount()}
+              active={unwateredCount()  > 0}
             />
             <Card
               image={paprikaImg}
-              title="Your paprika is ready!"
+              title={
+              hasHarvestReadyPlants()
+              ? "🎉 You have plants ready to harvest today!"
+              : "No harvest-ready plants yet"
+              }
               value=""
-              active={true}
+              active={hasHarvestReadyPlants()}
             />
+
             <Card
               image={fertilizedImg}
               title="Plants that need to be fertilized today"
-              value={fertilizeCount()}
-              active={fertilizeCount() > 0}
+              value={unfertilizedCount()}
+              active={unfertilizedCount() > 0}
               imageBelow={true}
             />
           </div>

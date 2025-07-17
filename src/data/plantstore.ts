@@ -8,6 +8,7 @@ const initialPlants: Plant[] = Array.from({ length: 12 }, (_, i) => ({
   name: "Paprika",
   type: "Vegetable",
   age: 110,
+  plantedDate: new Date(2025, 3, 27), // 27 April 2025
   image: paprika,
   status: {
     [getTodayDate()]: {

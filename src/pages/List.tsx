@@ -4,11 +4,14 @@ import type { Plant } from "../data/plant";
 import paprika from "../assets/paprika.png";
 import profile from "../assets/profile.png";
 import { getTodayDate } from "../data/date";
+import { selectedDate } from "../data/calendarStore";
 
+// ✅ Tambahkan plantedDate
 const initialPlants: Plant[] = Array.from({ length: 12 }, (_, i) => ({
   id: i + 1,
   name: "Paprika",
   type: "Vegetable",
+  plantedDate: new Date(2025, 3, 27), // 27 April 2025
   age: 110,
   image: paprika,
   status: {
@@ -19,6 +22,13 @@ const initialPlants: Plant[] = Array.from({ length: 12 }, (_, i) => ({
     },
   },
 }));
+
+// ✅ Fungsi hitung umur tanaman
+function calculatePlantAge(plantedDate: Date, currentDateStr: string) {
+  const currentDate = new Date(currentDateStr);
+  const diffTime = currentDate.getTime() - plantedDate.getTime();
+  return Math.floor(diffTime / (1000 * 60 * 60 * 24)); // hasil dalam hari
+}
 
 export default function YourPlants() {
   const [sidebarOpen, setSidebarOpen] = createSignal(false);
@@ -100,18 +110,18 @@ export default function YourPlants() {
             onClick={() => setShowProfileMenu(!showProfileMenu())}
           />
           <Show when={showProfileMenu()}>
-              <div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-50">
-                <a href="/profile" class="block py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer">
-                  Profile
-                </a>
-                <a href="/settings" class="block py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer">
-                  Settings
-                </a>
-                <a href="/logout" class="block py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer text-red-500">
-                  Logout
-                </a>
-              </div>
-            </Show>
+            <div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-50">
+              <a href="/profile" class="block py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer">
+                Profile
+              </a>
+              <a href="/settings" class="block py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer">
+                Settings
+              </a>
+              <a href="/logout" class="block py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer text-red-500">
+                Logout
+              </a>
+            </div>
+          </Show>
         </div>
 
         {/* Plant List */}
@@ -119,7 +129,7 @@ export default function YourPlants() {
           <h2 class="text-2xl font-bold mb-6">Your Plants</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {plants().map((plant) => {
-              const today = getTodayDate();
+              const today = selectedDate();
               const todayStatus = plant.status[today] || {
                 watered: false,
                 fertilized: false,
@@ -135,7 +145,7 @@ export default function YourPlants() {
                   <div>
                     <p><strong>Name</strong> : {plant.name}</p>
                     <p><strong>Type</strong> : {plant.type}</p>
-                    <p><strong>Age</strong> : {plant.age} days</p>
+                    <p><strong>Age</strong> : {calculatePlantAge(plant.plantedDate, today)} days</p>
                     <p class="mt-2"><strong>Last status :</strong></p>
                     <div class="text-sm space-y-1 mt-1">
                       <label class="flex items-center gap-2">

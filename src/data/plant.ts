@@ -10,6 +10,7 @@ export type Plant = {
   name: string;
   type: string;
   age: number;
+  plantedDate: Date;
   image?: string;
   status: {
     [date: string]: {
