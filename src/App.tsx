@@ -9,6 +9,7 @@ import Add from "./pages/Add";
 import Logout from "./pages/Logout";
 import Growth from "./pages/Growth";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 
 const App: Component = () => {
   return (
@@ -22,6 +23,7 @@ const App: Component = () => {
       <Route path="/logout" component={Logout} />
       <Route path="/growth" component={Growth} />
       <Route path="/profile" component={Profile} />
+      <Route path="/settings" component={Settings} />
       {/* Optional fallback */}
       <Route path="*" component={Home} />
     </Router>
