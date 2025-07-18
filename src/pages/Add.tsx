@@ -29,6 +29,7 @@ export default function AddPlant() {
       name: name(),
       type: type(),
       age: 0,
+      plantedDate: new Date(), // <-- Added plantedDate
       image: imageData() ?? "",
       status: {
         [getTodayDate()]: {
