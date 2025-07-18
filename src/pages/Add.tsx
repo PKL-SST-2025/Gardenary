@@ -1,6 +1,6 @@
 import { createSignal, onMount, onCleanup, Show } from "solid-js";
 import { plants, setPlants } from "../data/plantstore";
-import { getTodayDate } from "../data/date";
+import { createPlant } from "../data/plantFactory";
 import profile from "../assets/profile.png";
 
 export default function AddPlant() {
@@ -12,6 +12,7 @@ export default function AddPlant() {
   const [type, setType] = createSignal("Vegetable");
   const [imageData, setImageData] = createSignal<string | undefined>();
 
+  // Handle upload gambar
   const handleImageUpload = (e: Event) => {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (file) {
@@ -21,25 +22,11 @@ export default function AddPlant() {
     }
   };
 
+  // Simpan data tanaman baru
   const handleSave = () => {
     if (!name().trim()) return alert("Name required");
 
-    const newPlant = {
-      id: Date.now(),
-      name: name(),
-      type: type(),
-      age: 0,
-      plantedDate: new Date(), // <-- Added plantedDate
-      image: imageData() ?? "",
-      status: {
-        [getTodayDate()]: {
-          watered: false,
-          fertilized: false,
-          harvested: false,
-        },
-      },
-    };
-
+    const newPlant = createPlant(name(), type(), imageData());
     setPlants((prev) => [...prev, newPlant]);
 
     setName("");
@@ -47,6 +34,7 @@ export default function AddPlant() {
     alert("Plant added!");
   };
 
+  // Tutup menu profil kalau klik di luar
   onMount(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (profileRef && !profileRef.contains(e.target as Node)) {
@@ -80,12 +68,8 @@ export default function AddPlant() {
       </div>
 
       {/* Konten Utama */}
-      <div
-        class={`flex-1 transition-all duration-300 p-4 md:p-6 overflow-y-auto max-h-screen ${
-          sidebarOpen() ? "ml-64" : "ml-0"
-        }`}
-      >
-        {/* Tombol toggle (mobile) */}
+      <div class={`flex-1 transition-all duration-300 p-4 md:p-6 overflow-y-auto max-h-screen ${sidebarOpen() ? "ml-64" : "ml-0"}`}>
+        {/* Tombol menu (mobile) */}
         <button
           class="md:hidden mb-4 bg-green-600 text-white px-4 py-2 rounded"
           onClick={() => setSidebarOpen(!sidebarOpen())}
@@ -93,7 +77,7 @@ export default function AddPlant() {
           {sidebarOpen() ? "Close" : "Menu"}
         </button>
 
-        {/* Profile Button */}
+        {/* Tombol profil */}
         <div class="absolute top-8 right-10 z-50" ref={profileRef}>
           <img
             src={profile}
@@ -102,24 +86,19 @@ export default function AddPlant() {
             onClick={() => setShowProfileMenu(!showProfileMenu())}
           />
           <Show when={showProfileMenu()}>
-              <div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-50">
-                <a href="/profile" class="block py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer">
-                  Profile
-                </a>
-                <a href="/settings" class="block py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer">
-                  Settings
-                </a>
-                <a href="/logout" class="block py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer text-red-500">
-                  Logout
-                </a>
-              </div>
-            </Show>
+            <div class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-50">
+              <a href="/profile" class="block py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer">Profile</a>
+              <a href="/settings" class="block py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer">Settings</a>
+              <a href="/logout" class="block py-2 px-4 text-sm hover:bg-gray-100 cursor-pointer text-red-500">Logout</a>
+            </div>
+          </Show>
         </div>
 
-        {/* Form Tambah Plant */}
+        {/* Form Tambah Tanaman */}
         <div class="p-8">
           <h2 class="text-2xl font-bold mb-6 text-center">Create your new plants</h2>
           <div class="flex flex-col md:flex-row gap-8 justify-center items-start">
+            {/* Form Input */}
             <div class="flex flex-col gap-4">
               <input
                 type="text"
@@ -145,6 +124,7 @@ export default function AddPlant() {
               </button>
             </div>
 
+            {/* Upload Gambar */}
             <div class="bg-gray-200 w-40 h-40 flex items-center justify-center rounded shadow">
               <label class="cursor-pointer text-green-800 text-center px-2">
                 <input
