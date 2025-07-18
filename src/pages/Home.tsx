@@ -9,6 +9,7 @@ import growth from '../assets/growth.png';
 import leafLogo from '../assets/leaf-logo.png';
 import placeholder from '../assets/placeholder.png';
 import footer from '../assets/footer.png';
+import { useNavigate } from "@solidjs/router";
 
 interface FeatureSectionProps {
   number: number;
@@ -37,9 +38,15 @@ const FeatureSection: Component<FeatureSectionProps> = ({ number, title, quote, 
 };
 
 const Home: Component = () => {
+  const navigate = useNavigate();
+
   let featuresRef: HTMLDivElement | undefined;
   let aboutRef: HTMLDivElement | undefined;
   let dashboardRef: HTMLDivElement | undefined;
+
+  const goToReview = () => {
+    navigate("/review");
+  };
 
   const scrollToFeatures = () => {
     featuresRef?.scrollIntoView({ behavior: 'smooth' });
@@ -203,12 +210,16 @@ const Home: Component = () => {
 
       {/* Feedback Form */}
       <div class="flex flex-col items-center space-y-2 md:mr-28">
-        <span class="text-sm md:text-base">Send your <span class="whitespace-nowrap">feedback!!!</span></span>
-        <button class="bg-green-800 hover:bg-green-900 text-white px-36 py-2 rounded-full font-semibold transition duration-200">
-          Send
-        </button>
-      </div>
-    </footer>
+      <span class="text-sm md:text-base">Send your <span class="whitespace-nowrap">feedback!!!</span></span>
+      <button
+      onClick={goToReview}
+      class="bg-green-800 hover:bg-green-900 text-white px-36 py-2 rounded-full font-semibold transition duration-200"
+      >
+      Send
+    </button>
+  </div>
+</footer>
+
     </div>
   );
 };

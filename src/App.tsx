@@ -10,6 +10,7 @@ import Logout from "./pages/Logout";
 import Growth from "./pages/Growth";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import Review from "./pages/Review";
 
 const App: Component = () => {
   return (
@@ -24,6 +25,7 @@ const App: Component = () => {
       <Route path="/growth" component={Growth} />
       <Route path="/profile" component={Profile} />
       <Route path="/settings" component={Settings} />
+      <Route path="/review" component={Review} />
       {/* Optional fallback */}
       <Route path="*" component={Home} />
     </Router>
