@@ -1,5 +1,6 @@
 import { createSignal, type Component } from 'solid-js';
 import { A, useNavigate } from "@solidjs/router";
+import { loginUser } from "../services/api"; 
 
 const Login: Component = () => {
   const navigate = useNavigate();
@@ -9,23 +10,35 @@ const Login: Component = () => {
   const [password, setPassword] = createSignal("");
   const [agreed, setAgreed] = createSignal(false);
   const [isLoading, setIsLoading] = createSignal(false);
+  const [error, setError] = createSignal("");
 
-  const handleLogin = async () => {
-    if (!name() || !email() || !password()) {
-      alert("Please fill in all fields");
+  const handleLogin = async (e: Event) => {
+    e.preventDefault();
+    setError("");
+
+    if (!email() || !password()) {
+      setError("Please fill in all fields");
       return;
     }
     if (!agreed()) {
-      alert("You must agree to the terms");
+      setError("You must agree to the terms");
       return;
     }
 
     setIsLoading(true);
-    // Simulate loading
-    setTimeout(() => {
+    try {
+      const result = await loginUser(email(), password());
+      if (result.success) {
+        navigate("/dashboard");
+      } else {
+        setError(result.message);
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError("An unexpected error occurred during login");
+    } finally {
       setIsLoading(false);
-      navigate("/dashboard");
-    }, 1500);
+    }
   };
 
   return (

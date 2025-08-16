@@ -8,6 +8,7 @@
     "skipLibCheck": true,
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
+    "lib": ["ESNext", "DOM"],
 
     /* Bundler mode */
     "moduleResolution": "bundler",

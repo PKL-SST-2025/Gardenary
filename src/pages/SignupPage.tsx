@@ -1,5 +1,6 @@
 import { createSignal, type Component } from 'solid-js';
 import { useNavigate, A } from "@solidjs/router";
+import { registerUser, type RegisterDTO } from "../services/api";
 
 const SignupPage: Component = () => {
   const navigate = useNavigate();
@@ -12,26 +13,51 @@ const SignupPage: Component = () => {
   const [birthDate, setBirthDate] = createSignal("");
   const [agreed, setAgreed] = createSignal(false);
   const [isLoading, setIsLoading] = createSignal(false);
+  const [errorMsg, setErrorMsg] = createSignal("");
+  const [successMsg, setSuccessMsg] = createSignal("");
 
-  const handleSignup = () => {
+  const handleSignup = async () => {
+    setErrorMsg("");
+    setSuccessMsg("");
     if (!name() || !email() || !password() || !confirmPassword() || !city() || !birthDate()) {
-      alert("Please fill in all fields");
+      setErrorMsg("Please fill in all fields");
       return;
     }
     if (password() !== confirmPassword()) {
-      alert("Passwords do not match");
+      setErrorMsg("Passwords do not match");
       return;
     }
     if (!agreed()) {
-      alert("You must agree to the terms");
+      setErrorMsg("You must agree to the terms");
       return;
     }
-
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const userData: RegisterDTO = {
+        name: name(),
+        email: email(),
+        password: password(),
+        confirm_password: confirmPassword(),
+        city: city(),
+        birth_date: birthDate(),
+      };
+
+      const result = await registerUser(userData);
+      
+      if (result.success) {
+        setSuccessMsg(result.message);
+        setTimeout(() => {
+          navigate("/dashboard"); // Redirect to dashboard instead of login
+        }, 1500);
+      } else {
+        setErrorMsg(result.message);
+      }
+    } catch (err: any) {
+      setErrorMsg("Registration failed. Please try again.");
+      console.error('Registration error:', err);
+    } finally {
       setIsLoading(false);
-      navigate("/login");
-    }, 1500);
+    }
   };
 
   return (
@@ -376,6 +402,7 @@ const SignupPage: Component = () => {
                     <input
                       class="w-full px-6 py-4 bg-white/70 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:bg-white transition duration-300 placeholder-gray-400 shadow-lg backdrop-blur-sm"
                       type="date"
+                      lang="en-CA"
                       placeholder="Enter your birth date"
                       value={birthDate()}
                       onInput={(e) => setBirthDate(e.currentTarget.value)}
@@ -444,6 +471,14 @@ const SignupPage: Component = () => {
                       )}
                     </span>
                   </button>
+
+                  {/* Tampilkan pesan error/sukses di UI */}
+                  {errorMsg() && (
+                    <div class="text-red-600 text-center font-semibold mb-2 animate-fade-in-down">{errorMsg()}</div>
+                  )}
+                  {successMsg() && (
+                    <div class="text-green-600 text-center font-semibold mb-2 animate-fade-in-down">{successMsg()}</div>
+                  )}
 
                   {/* Link to Login */}
                   <p class="text-center text-gray-600 font-medium">

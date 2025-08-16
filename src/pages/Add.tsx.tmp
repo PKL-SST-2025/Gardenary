@@ -1,0 +1,233 @@
+import { createSignal, onMount, onCleanup, Show, type Component } from "solid-js";
+import { addPlant } from "../data/plantstore";
+import type { Plant } from "../data/plant";
+import { getTodayDate } from "../data/date";
+import profile from "../assets/profile.png";
+import { useNavigate } from "@solidjs/router";
+import { user } from "../data/authStore";
+
+const AddPlant: Component = () => {
+  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = createSignal(false);
+  const [showProfileMenu, setShowProfileMenu] = createSignal(false);
+  const [isLoading, setIsLoading] = createSignal(false);
+  let profileRef: HTMLDivElement | undefined;
+
+  const [name, setName] = createSignal("");
+  const [type, setType] = createSignal("Vegetable");
+  const [imageData, setImageData] = createSignal<string | undefined>();
+
+  // Handle image upload
+  const handleImageUpload = (e: Event) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => setImageData(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Save new plant
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
+    
+    if (!name().trim()) {
+      alert("Name is required");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const today = getTodayDate();
+      await addPlant({
+        name: name(),
+        type: type(),
+        image: imageData() || '',
+        plantedDate: new Date(),
+        age: 0,
+        status: {
+          [today]: {
+            watered: false,
+            fertilized: false,
+            harvested: false,
+          }
+        }
+      });
+
+      // Reset form
+      setName("");
+      setType("Vegetable");
+      setImageData(undefined);
+
+      navigate('/list');
+    } catch (error) {
+      console.error('Failed to add plant:', error);
+      alert('Failed to add plant. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Check authentication
+  onMount(() => {
+    const currentUser = user();
+    if (!currentUser) {
+      navigate('/login');
+    }
+  });
+
+  // Handle click outside profile menu
+  onMount(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileRef && !profileRef.contains(e.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    onCleanup(() => document.removeEventListener("click", handleClickOutside));
+  });
+
+  return (
+    <div class="flex min-h-screen bg-green-50">
+      {/* Sidebar */}
+      <div
+        class={`fixed z-40 top-0 left-0 h-screen overflow-y-auto transition-transform duration-300 bg-lime-100 w-48 p-4 ${
+          sidebarOpen() ? "translate-x-0" : "-translate-x-full"
+        } md:translate-x-0 md:static md:sticky md:top-0`}
+      >
+        <a href="/" class="font-bold border-b pb-2 block text-xl text-green-900">
+          Gardenary
+        </a>
+        <nav class="space-y-2 text-green-900 mt-4">
+          <a href="/dashboard" class="flex items-center gap-2 hover:underline">🏠 Dashboard</a>
+          <a href="/list" class="flex items-center gap-2 hover:underline">📋 List</a>
+          <a href="/add" class="flex items-center gap-2 hover:underline font-bold text-green-800">➕ Add</a>
+          <a href="/growth" class="flex items-center gap-2 hover:underline">📈 Growth</a>
+        </nav>
+      </div>
+
+      {/* Main Content */}
+      <div class="flex-1 p-4">
+        {/* Header */}
+        <header class="flex justify-between items-center mb-6">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen())}
+            class="md:hidden text-green-800"
+          >
+            ☰
+          </button>
+          <div class="relative" ref={profileRef}>
+            <button
+              onClick={() => setShowProfileMenu(!showProfileMenu())}
+              class="flex items-center space-x-2"
+            >
+              <img
+                src={profile}
+                alt="Profile"
+                class="w-8 h-8 rounded-full border-2 border-green-500"
+              />
+              <span class="text-green-800">{user()?.name || 'User'}</span>
+            </button>
+            <Show when={showProfileMenu()}>
+              <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1">
+                <a
+                  href="/profile"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Profile
+                </a>
+                <a
+                  href="/settings"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Settings
+                </a>
+                <button
+                  onClick={() => {
+                    navigate('/login');
+                  }}
+                  class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Logout
+                </button>
+              </div>
+            </Show>
+          </div>
+        </header>
+
+        {/* Add Plant Form */}
+        <div class="max-w-xl mx-auto bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-2xl font-bold mb-6 text-green-800">Add New Plant</h2>
+          <form onSubmit={handleSubmit} class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Plant Name</label>
+              <input
+                type="text"
+                value={name()}
+                onInput={(e) => setName(e.currentTarget.value)}
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                required
+              />
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Type</label>
+              <select
+                value={type()}
+                onChange={(e) => setType(e.currentTarget.value)}
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+              >
+                <option value="Vegetable">Vegetable</option>
+                <option value="Fruit">Fruit</option>
+                <option value="Herb">Herb</option>
+                <option value="Flower">Flower</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Plant Image</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageUpload(e)}
+                class="mt-1 block w-full text-sm text-gray-500
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-md file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-green-50 file:text-green-700
+                  hover:file:bg-green-100"
+              />
+              {imageData() && (
+                <img
+                  src={imageData()}
+                  alt="Plant preview"
+                  class="mt-2 h-32 w-32 object-cover rounded-md"
+                />
+              )}
+            </div>
+            
+            <div class="flex justify-end gap-4">
+              <button
+                type="button"
+                onClick={() => navigate('/list')}
+                class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isLoading()}
+                class={`px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 
+                  ${isLoading() ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {isLoading() ? 'Adding...' : 'Add Plant'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AddPlant;

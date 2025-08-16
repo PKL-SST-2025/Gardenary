@@ -1,5 +1,5 @@
-import type { Component } from 'solid-js';
-import { onMount } from 'solid-js';
+import { createSignal, type Component } from 'solid-js';
+import { onMount, For } from 'solid-js';
 import logo from '../assets/logo.png';
 import background from '../assets/background.png';
 import dashboard from '../assets/dashboard.png';
@@ -39,13 +39,25 @@ const FeatureSection: Component<FeatureSectionProps> = ({ number, title, quote, 
 
 const Home: Component = () => {
   const navigate = useNavigate();
+  const [feedbackList, setFeedbackList] = createSignal<{ name: string; comment: string }[]>([]);
 
   let featuresRef: HTMLDivElement | undefined;
   let aboutRef: HTMLDivElement | undefined;
   let dashboardRef: HTMLDivElement | undefined;
 
+  onMount(() => {
+    const stored = localStorage.getItem("reviews");
+    if (stored) {
+      setFeedbackList(JSON.parse(stored));
+    }
+  });
+
   const goToReview = () => {
     navigate("/review");
+  };
+
+  const goToProducts = () => {
+    navigate("/products");
   };
 
   const scrollToFeatures = () => {
@@ -95,9 +107,17 @@ const Home: Component = () => {
         <p class="text-sm md:text-base max-w-xl mb-6">
           Get the best guides, tools and plants for your dream garden.
         </p>
-        <a href="/signup" class="bg-green-700 hover:bg-green-800 text-white px-6 py-2 rounded-full font-semibold transition">
-          GET STARTED
-        </a>
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="/signup" class="bg-green-700 hover:bg-green-800 text-white px-6 py-2 rounded-full font-semibold transition">
+            GROW YOUR GARDEN
+          </a>
+          <button 
+            onClick={goToProducts}
+            class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-full font-semibold transition"
+          >
+            SHOP NOW
+          </button>
+        </div>
       </div>
 
       {/* Placeholder Section */}
@@ -116,25 +136,68 @@ const Home: Component = () => {
         />
         <FeatureSection
           number={2}
-          title="        List"
+          title="ㅤ List"
           quote="see all your plant list here!"
           description="You can see all your plants here. You can also monitor when your plants need to be watered, fertilized and harvested. Here you can also see the name, type, age and final status of the plant, such as not yet / already watered and fertilized or even harvested."
           imageSrc={list}
         />
         <FeatureSection
           number={3}
-          title="ㅤ   Add"
+          title="ㅤ Add"
           quote="add your new plant here!"
           description="this is where you add the plants you just bought. You can add it by filling in the name, type of plant, date you planted it and a photo of the plant. so, you don't have to worry if you want to add a new plant."
           imageSrc={add}
         />
         <FeatureSection
           number={4}
-          title="    Growth"
+          title="ㅤGrowth"
           quote=""
           description="Track plant growth over time with helpful visualizations and insights."
           imageSrc={growth}
         />
+      </div>
+
+      {/* Products Preview Section */}
+      <div class="bg-green-50 py-16">
+        <div class="max-w-5xl mx-auto px-4">
+          <h2 class="text-3xl font-bold text-center mb-8 text-gray-900">Our Products</h2>
+          <p class="text-center text-gray-600 mb-12">Everything you need for your gardening journey</p>
+          
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition">
+              <div class="text-4xl mb-4">🌱</div>
+              <h3 class="font-semibold text-lg mb-2">Seeds</h3>
+              <p class="text-gray-600 text-sm">High-quality seeds for various plants</p>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition">
+              <div class="text-4xl mb-4">🛠️</div>
+              <h3 class="font-semibold text-lg mb-2">Tools</h3>
+              <p class="text-gray-600 text-sm">Professional gardening tools</p>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition">
+              <div class="text-4xl mb-4">🧪</div>
+              <h3 class="font-semibold text-lg mb-2">Fertilizers</h3>
+              <p class="text-gray-600 text-sm">Organic and synthetic fertilizers</p>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition">
+              <div class="text-4xl mb-4">🏺</div>
+              <h3 class="font-semibold text-lg mb-2">Pots</h3>
+              <p class="text-gray-600 text-sm">Beautiful pots for all plant types</p>
+            </div>
+          </div>
+          
+          <div class="text-center">
+            <button
+              onClick={goToProducts}
+              class="bg-green-800 hover:bg-green-900 text-white px-8 py-3 rounded-full font-semibold transition"
+            >
+              Browse All Products
+            </button>
+          </div>
+        </div>
       </div>
 
        {/* section */}
@@ -190,21 +253,21 @@ const Home: Component = () => {
 
         {/* Feedback Cards */}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="bg-orange-300 p-6 rounded-lg">
-            <img src={placeholder} alt="Avatar" class="w-10 h-10 rounded-full mb-4" />
-            <p class="text-white">This plant tracking app has helped me stay consistent with my watering schedule. Love it!</p>
-          </div>
-          <div class="bg-orange-300 p-6 rounded-lg">
-            <img src={placeholder} alt="Avatar" class="w-10 h-10 rounded-full mb-4" />
-            <p class="text-white">I really like the reminders and the clean interface. My plants are healthier than ever.</p>
-          </div>
+          <For each={feedbackList()}>
+            {(item: { name: string; comment: string }) => (
+              <div class="bg-orange-300 p-6 rounded-lg">
+                <img src={placeholder} alt="Avatar" class="w-10 h-10 rounded-full mb-4" />
+                <p class="text-white font-bold">{item.name}</p>
+                <p class="text-white">{item.comment}</p>
+              </div>
+            )}
+          </For>
         </div>
-      </div>
-
-      <footer
+       </div>
+    <footer
       class="w-full h-48 md:h-56 bg-cover bg-center flex flex-col md:flex-row justify-between items-center px-6 md:px-16 py-6 text-white"
       style={{ "background-image": `url(${footer})` }}
-      >
+    >
       {/* Brand Name */}
       <h2 class="text-3xl font-extrabold drop-shadow-md md:ml-16">Gardenary</h2>
 
@@ -212,16 +275,15 @@ const Home: Component = () => {
       <div class="flex flex-col items-center space-y-2 md:mr-28">
       <span class="text-sm md:text-base">Send your <span class="whitespace-nowrap">feedback!!!</span></span>
       <button
-      onClick={goToReview}
-      class="bg-green-800 hover:bg-green-900 text-white px-36 py-2 rounded-full font-semibold transition duration-200"
+        onClick={goToReview}
+        class="bg-green-800 hover:bg-green-900 text-white px-36 py-2 rounded-full font-semibold transition duration-200"
       >
-      Send
-    </button>
-  </div>
-</footer>
-
+        Send
+      </button>
+      </div>
+    </footer>
     </div>
   );
 };
 
-export default Home;
+export default Home; 

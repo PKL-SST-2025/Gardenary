@@ -5,17 +5,42 @@ export default function ReviewForm() {
   const [rating, setRating] = createSignal(0);
   const [hover, setHover] = createSignal(0);
   const [name1, setName1] = createSignal("");
-  const [name2, setName2] = createSignal("");
+  const [email, setEmail] = createSignal("");
   const [comment, setComment] = createSignal("");
   const [showProfileMenu, setShowProfileMenu] = createSignal(false);
+  const [feedbackList, setFeedbackList] = createSignal<{ name: string; comment: string }[]>([]);
+
   let profileRef: HTMLDivElement | undefined;
 
   const handleSubmit = (e: Event) => {
     e.preventDefault();
-    alert(`Rating: ${rating()} - Name1: ${name1()} - Name2: ${name2()} - Comment: ${comment()}`);
+    const newFeedback = {
+    name: name1() || email(),
+    comment: comment()
   };
 
+  // Ambil data lama dari localStorage
+  const existingFeedback = JSON.parse(localStorage.getItem("reviews") || "[]");
+
+  // Simpan data baru ke localStorage
+  const updatedFeedback = [newFeedback, ...existingFeedback];
+  localStorage.setItem("reviews", JSON.stringify(updatedFeedback));
+
+  alert("Review submitted!");
+
+  // Reset form
+  setRating(0);
+  setHover(0);
+  setName1("");
+  setEmail("");
+  setComment("");
+};
+
   onMount(() => {
+    const stored = localStorage.getItem("reviews");
+  if (stored) {
+    setFeedbackList(JSON.parse(stored));
+  }
     const handleClickOutside = (e: MouseEvent) => {
       if (profileRef && !profileRef.contains(e.target as Node)) {
         setShowProfileMenu(false);
@@ -84,13 +109,13 @@ export default function ReviewForm() {
         />
         <input
           type="text"
-          placeholder="Enter your name"
+          placeholder="Enter your email"
           class="w-full border p-2 rounded"
-          value={name2()}
-          onInput={(e) => setName2(e.currentTarget.value)}
+          value={email()}
+          onInput={(e) => setEmail(e.currentTarget.value)}
         />
         <textarea
-          placeholder="Enter your name"
+          placeholder="Enter your comment"
           class="w-full border p-2 rounded h-24"
           value={comment()}
           onInput={(e) => setComment(e.currentTarget.value)}
