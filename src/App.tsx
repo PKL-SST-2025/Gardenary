@@ -4,7 +4,6 @@ import Home from './pages/Home';
 import SignupPage from './pages/SignupPage';
 import Login from './pages/Login';
 import Dashboard from "./pages/Dashboard";
-import * as ListPage from "./pages/List";
 import Add from "./pages/Add";
 import Logout from "./pages/Logout";
 import Growth from "./pages/Growth";
@@ -14,7 +13,7 @@ import Review from "./pages/Review";
 import Products from "./pages/Products";
 import MyOrders from "./pages/MyOrders";
 import TransactionHistory from "./pages/TransactionHistory";
-import { login as apiLogin, signupage as apiRegister } from "./services/api";
+import { loginUser as apiLogin, registerUser as apiRegister } from "./services/api";
 
 const App: Component = () => {
   return (
@@ -23,7 +22,6 @@ const App: Component = () => {
       <Route path="/signup" component={SignupPage} />
       <Route path="/login" component={Login} />
       <Route path="/dashboard" component={Dashboard} />
-      <Route path="/list" component={ListPage.default} />
       <Route path="/add" component={Add} />
       <Route path="/logout" component={Logout} />
       <Route path="/growth" component={Growth} />
