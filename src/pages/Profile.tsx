@@ -1,5 +1,6 @@
-import { createSignal, createMemo, Show, For } from 'solid-js';
+import { createSignal, createMemo, Show, For, onMount, createEffect } from 'solid-js';
 import { createStore } from 'solid-js/store';
+import { getProfile, updateProfile, getCurrentUser, type ProfileData, type User } from '../services/api';
 
 // Types
 interface Plant {
@@ -50,93 +51,201 @@ interface ProfileFormData {
   favoritePlants: string[];
 }
 
-// Mock data
-const mockProfile: GardenerProfile = {
-  id: '1',
-  name: 'Sarah Green',
-  email: 'sarah.green@example.com',
-  avatar: 'https://images.unsplash.com/photo-1494790108755-2616c9c3a6b1?w=150&h=150&fit=crop&crop=face',
-  bio: 'Passionate gardener with a love for sustainable growing. Specializing in herbs and vegetables. 🌱',
-  location: 'Bandung, Indonesia',
-  gardenType: 'Organic Vegetable Garden',
-  experience: 'intermediate',
-  joinDate: 'March 2023',
-  plantsOwned: 47,
-  plantsHarvested: 23,
-  gardenScore: 1250,
-  followers: 892,
-  following: 234,
-  favoritePlants: ['Tomato', 'Basil', 'Lettuce', 'Mint'],
-  recentPlants: [
-    {
-      id: '1',
-      name: 'Cherry Tomato',
-      species: 'Solanum lycopersicum',
-      image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=100&h=100&fit=crop',
-      plantedDate: '2 weeks ago',
-      status: 'healthy',
-      location: 'Greenhouse'
-    },
-    {
-      id: '2',
-      name: 'Sweet Basil',
-      species: 'Ocimum basilicum',
-      image: 'https://images.unsplash.com/photo-1618164436241-4473940d1f5c?w=100&h=100&fit=crop',
-      plantedDate: '1 week ago',
-      status: 'needs-water',
-      location: 'Indoor Pot'
-    },
-    {
-      id: '3',
-      name: 'Lettuce',
-      species: 'Lactuca sativa',
-      image: 'https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=100&h=100&fit=crop',
-      plantedDate: '3 days ago',
-      status: 'healthy',
-      location: 'Garden Bed'
-    }
-  ],
-  achievements: [
-    {
-      id: '1',
-      title: 'Green Thumb',
-      description: 'Successfully grew 10 different plants',
-      icon: '🌱',
-      earnedDate: '1 month ago',
-      rarity: 'common'
-    },
-    {
-      id: '2',
-      title: 'Harvest Master',
-      description: 'Harvested 20 plants successfully',
-      icon: '🥕',
-      earnedDate: '2 weeks ago',
-      rarity: 'rare'
-    },
-    {
-      id: '3',
-      title: 'Plant Whisperer',
-      description: 'Maintained 95% plant survival rate',
-      icon: '🌿',
-      earnedDate: '1 week ago',
-      rarity: 'epic'
-    }
-  ]
-};
+// Mock data for plants and achievements
+const mockRecentPlants: Plant[] = [
+  {
+    id: '1',
+    name: 'Cherry Tomato',
+    species: 'Solanum lycopersicum',
+    image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=100&h=100&fit=crop',
+    plantedDate: '2 weeks ago',
+    status: 'healthy',
+    location: 'Greenhouse'
+  },
+  {
+    id: '2',
+    name: 'Sweet Basil',
+    species: 'Ocimum basilicum',
+    image: 'https://images.unsplash.com/photo-1618164436241-4473940d1f5c?w=100&h=100&fit=crop',
+    plantedDate: '1 week ago',
+    status: 'needs-water',
+    location: 'Indoor Pot'
+  },
+  {
+    id: '3',
+    name: 'Lettuce',
+    species: 'Lactuca sativa',
+    image: 'https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=100&h=100&fit=crop',
+    plantedDate: '3 days ago',
+    status: 'healthy',
+    location: 'Garden Bed'
+  }
+];
+
+const mockAchievements: Achievement[] = [
+  {
+    id: '1',
+    title: 'Green Thumb',
+    description: 'Successfully grew 10 different plants',
+    icon: '🌱',
+    earnedDate: '1 month ago',
+    rarity: 'common'
+  },
+  {
+    id: '2',
+    title: 'Harvest Master',
+    description: 'Harvested 20 plants successfully',
+    icon: '🥕',
+    earnedDate: '2 weeks ago',
+    rarity: 'rare'
+  },
+  {
+    id: '3',
+    title: 'Plant Whisperer',
+    description: 'Maintained 95% plant survival rate',
+    icon: '🌿',
+    earnedDate: '1 week ago',
+    rarity: 'epic'
+  }
+];
 
 const GardenProfilePage = () => {
   // State management
-  const [profile, setProfile] = createStore<GardenerProfile>(mockProfile);
+  const [profile, setProfile] = createStore<GardenerProfile>({
+    id: '',
+    name: '',
+    email: '',
+    avatar: '',
+    bio: '',
+    location: '',
+    gardenType: '',
+    experience: 'beginner',
+    joinDate: '',
+    plantsOwned: 0,
+    plantsHarvested: 0,
+    gardenScore: 100,
+    followers: 0,
+    following: 0,
+    favoritePlants: [],
+    recentPlants: mockRecentPlants,
+    achievements: mockAchievements
+  });
+
   const [isEditing, setIsEditing] = createSignal(false);
   const [isLoading, setIsLoading] = createSignal(false);
   const [activeTab, setActiveTab] = createSignal<'plants' | 'achievements'>('plants');
   const [formData, setFormData] = createStore<ProfileFormData>({
-    name: profile.name,
-    bio: profile.bio,
-    location: profile.location,
-    gardenType: profile.gardenType,
-    experience: profile.experience,
-    favoritePlants: [...profile.favoritePlants]
+    name: '',
+    bio: '',
+    location: '',
+    gardenType: '',
+    experience: 'beginner',
+    favoritePlants: []
+  });
+  const [error, setError] = createSignal(""); // Tambah error state
+  const [profileLoading, setProfileLoading] = createSignal(true); // Tambah sinyal loading
+
+  // Load profile data on mount
+  onMount(async () => {
+    try {
+      // First try to get current user to ensure we have auth data
+      const userResult = await getCurrentUser();
+      console.log("getCurrentUser result:", userResult);
+
+      if (userResult.success && userResult.data) {
+        const userData = userResult.data as User;
+        const storedProfile = getProfile();
+        console.log("getProfile result:", storedProfile);
+
+        if (storedProfile) {
+          Object.entries(storedProfile).forEach(([key, value]) => {
+            // @ts-ignore
+            setProfile(key, value);
+          });
+          // Paksa trigger reactivity dan fallback jika field tidak ada/array kosong/null
+          setProfile(
+            "recentPlants",
+            Array.isArray(storedProfile.recentPlants) && storedProfile.recentPlants.length
+              ? [...storedProfile.recentPlants]
+              : [...mockRecentPlants]
+          );
+          setProfile(
+            "achievements",
+            Array.isArray(storedProfile.achievements) && storedProfile.achievements.length
+              ? [...storedProfile.achievements]
+              : [...mockAchievements]
+          );
+          setProfile(
+            "favoritePlants",
+            Array.isArray(storedProfile.favoritePlants) && storedProfile.favoritePlants.length
+              ? [...storedProfile.favoritePlants]
+              : ["Basil", "Tomato"]
+          );
+          setProfileLoading(false);
+        } else {
+          // Create profile from user data if no stored profile exists
+          const newProfile = {
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&size=150&background=4ade80&color=ffffff`,
+            bio: `Welcome to my garden! I'm ${userData.name} and I love growing plants. 🌱`,
+            location: userData.city || 'Not specified',
+            gardenType: 'Mixed Garden',
+            experience: 'beginner' as const,
+            joinDate: userData.created_at ? new Date(userData.created_at).toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long' 
+            }) : new Date().toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long' 
+            }),
+            plantsOwned: 0,
+            plantsHarvested: 0,
+            gardenScore: 100,
+            followers: 0,
+            following: 0,
+            favoritePlants: ['Basil', 'Tomato'],
+            recentPlants: mockRecentPlants,
+            achievements: mockAchievements
+          };
+          
+          setProfile(newProfile);
+          setTimeout(() => {
+            setProfileLoading(false);
+          }, 0);
+          
+          // Save the new profile
+          updateProfile({
+            id: newProfile.id,
+            name: newProfile.name,
+            email: newProfile.email,
+            avatar: newProfile.avatar,
+            bio: newProfile.bio,
+            location: newProfile.location,
+            gardenType: newProfile.gardenType,
+            experience: newProfile.experience,
+            joinDate: newProfile.joinDate,
+            plantsOwned: newProfile.plantsOwned,
+            plantsHarvested: newProfile.plantsHarvested,
+            gardenScore: newProfile.gardenScore,
+            followers: newProfile.followers,
+            following: newProfile.following,
+            favoritePlants: newProfile.favoritePlants,
+            city: userData.city,
+            birth_date: userData.birth_date
+          });
+        }
+      } else {
+        setError("Failed to load user data. Please login again.");
+        setProfileLoading(false);
+        console.error("User result error:", userResult);
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      setError("Error loading profile. Please try again or relogin.");
+      setProfileLoading(false);
+    }
   });
 
   // Computed values
@@ -198,15 +307,23 @@ const GardenProfilePage = () => {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    setProfile({
-      ...profile,
+    const updatedProfileData = {
       name: formData.name,
       bio: formData.bio,
       location: formData.location,
       gardenType: formData.gardenType,
       experience: formData.experience,
       favoritePlants: [...formData.favoritePlants]
+    };
+    
+    // Update local state
+    setProfile({
+      ...profile,
+      ...updatedProfileData
     });
+    
+    // Update stored profile
+    updateProfile(updatedProfileData);
     
     setIsLoading(false);
     setIsEditing(false);
@@ -227,6 +344,30 @@ const GardenProfilePage = () => {
     setFormData('favoritePlants', formData.favoritePlants.filter(p => p !== plant));
   };
 
+  // Show loading or error state if no profile data
+  if (error()) {
+    return (
+      <div class="min-h-screen bg-green-50 py-8 flex items-center justify-center">
+        <div class="text-center">
+          <div class="text-red-500 text-lg font-bold mb-2">Error</div>
+          <div class="mb-4">{error()}</div>
+          <a href="/login" class="text-green-700 underline">Go to Login</a>
+        </div>
+      </div>
+    );
+  }
+  if (profileLoading()) {
+    return (
+      <div class="min-h-screen bg-green-50 py-8 flex items-center justify-center">
+        <div class="text-center">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <p class="text-gray-600">Loading your garden profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Hapus log di dalam return utama
   return (
     <div class="min-h-screen bg-green-50 py-8">
       <div class="max-w-6xl mx-auto px-4">

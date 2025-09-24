@@ -33,50 +33,101 @@ export interface ApiResponse<T = any> {
   data?: T;
 }
 
-// services/api.ts - Main API service
-export class ApiService {
-  private static baseUrl = 'http://localhost:8081';
-  private static token: string | null = null;
+export interface Task {
+  id: string;
+  userId: string;
+  plantId: string;
+  type: string;
+  description: string;
+  dueDate: string;
+  completed: boolean;
+}
 
-  // Initialize token from localStorage
+// Profile-related types
+export interface ProfileData {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  bio: string;
+  location: string;
+  gardenType: string;
+  experience: 'beginner' | 'intermediate' | 'expert';
+  joinDate: string;
+  plantsOwned: number;
+  plantsHarvested: number;
+  gardenScore: number;
+  followers: number;
+  following: number;
+  favoritePlants: string[];
+  city?: string;
+  birth_date?: string;
+}
+
+// =================================================
+// ================ API SERVICE ====================
+// =================================================
+
+export class ApiService {
+  private static baseUrl = "http://localhost:8081";
+  private static token: string | null = null;
+  private static currentUser: User | null = null;
+
   static init() {
-    if (typeof window !== 'undefined') {
-      this.token = localStorage.getItem('auth_token');
+    if (typeof window !== "undefined") {
+      this.token = localStorage.getItem("auth_token");
+      const userData = localStorage.getItem("user_data");
+      if (userData) {
+        try {
+          this.currentUser = JSON.parse(userData);
+        } catch (error) {
+          console.error('Failed to parse user data:', error);
+          localStorage.removeItem("user_data");
+        }
+      }
     }
   }
 
-  // Set authentication token
   static setToken(token: string) {
     this.token = token;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_token', token);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("auth_token", token);
     }
   }
 
-  // Clear authentication token
+  static setCurrentUser(user: User) {
+    this.currentUser = user;
+    if (typeof window !== "undefined") {
+      localStorage.setItem("user_data", JSON.stringify(user));
+    }
+  }
+
+  static getCurrentUser(): User | null {
+    return this.currentUser;
+  }
+
   static clearToken() {
     this.token = null;
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token');
+    this.currentUser = null;
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user_data");
+      localStorage.removeItem("profile_data");
     }
   }
 
-  // Get request headers
   private static getHeaders() {
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
-
     if (this.token) {
-      headers['authorization'] = `Bearer ${this.token}`;
+      headers["authorization"] = `Bearer ${this.token}`;
     }
-
     return headers;
   }
 
-  // Generic API request method
   private static async request<T>(
-    endpoint: string, 
+    endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     try {
@@ -100,216 +151,359 @@ export class ApiService {
     }
   }
 
-  // ========== POSTGRESQL ENDPOINTS ==========
-
-  // Register with PostgreSQL
+  // ================= AUTH (Postgres + Supabase) =================
   static async registerPG(userData: RegisterDTO): Promise<LoginResponse> {
-    const response = await this.request<LoginResponse>('/pg/auth/register', {
-      method: 'POST',
+    const response = await this.request<LoginResponse>("/pg/auth/register", {
+      method: "POST",
       body: JSON.stringify(userData),
     });
-
-    if (response.status === 'success' && response.data) {
+    if (response.status === "success" && response.data) {
       this.setToken(response.data.token);
+      this.setCurrentUser(response.data.user);
+      // Create initial profile data
+      this.createInitialProfile(response.data.user);
       return response.data;
-    } else {
-      throw new Error(response.message || 'Registration failed');
     }
+    throw new Error(response.message || "Registration failed");
   }
 
-  // Login with PostgreSQL
   static async loginPG(email: string, password: string): Promise<LoginResponse> {
-    const response = await this.request<LoginResponse>('/pg/auth/login', {
-      method: 'POST',
+    const response = await this.request<LoginResponse>("/pg/auth/login", {
+      method: "POST",
       body: JSON.stringify({ email, password }),
     });
-
-    if (response.status === 'success' && response.data) {
+    if (response.status === "success" && response.data) {
       this.setToken(response.data.token);
+      this.setCurrentUser(response.data.user);
+      // Update profile data after login
+      this.syncUserToProfile(response.data.user);
       return response.data;
-    } else {
-      throw new Error(response.message || 'Login failed');
     }
+    throw new Error(response.message || "Login failed");
   }
 
-  // Get current user info with PostgreSQL
   static async getMePG(): Promise<User> {
-    const response = await this.request<User>('/pg/auth/me', {
-      method: 'GET',
-    });
-
-    if (response.status === 'success' && response.data) {
+    const response = await this.request<User>("/pg/auth/me", { method: "GET" });
+    if (response.status === "success" && response.data) {
+      this.setCurrentUser(response.data);
+      this.syncUserToProfile(response.data);
       return response.data;
-    } else {
-      throw new Error(response.message || 'Failed to get user info');
     }
+    throw new Error(response.message || "Failed to get user info");
   }
 
-  // ========== SUPABASE ENDPOINTS ==========
-
-  // Register with Supabase
   static async registerSB(userData: RegisterDTO): Promise<LoginResponse> {
-    const response = await this.request<LoginResponse>('/sb/auth/register', {
-      method: 'POST',
+    const response = await this.request<LoginResponse>("/sb/auth/register", {
+      method: "POST",
       body: JSON.stringify(userData),
     });
-
-    if (response.status === 'success' && response.data) {
+    if (response.status === "success" && response.data) {
       this.setToken(response.data.token);
+      this.setCurrentUser(response.data.user);
+      // Create initial profile data
+      this.createInitialProfile(response.data.user);
       return response.data;
-    } else {
-      throw new Error(response.message || 'Registration failed');
     }
+    throw new Error(response.message || "Registration failed");
   }
 
-  // Login with Supabase
   static async loginSB(email: string, password: string): Promise<LoginResponse> {
-    const response = await this.request<LoginResponse>('/sb/auth/login', {
-      method: 'POST',
+    const response = await this.request<LoginResponse>("/sb/auth/login", {
+      method: "POST",
       body: JSON.stringify({ email, password }),
     });
-
-    if (response.status === 'success' && response.data) {
+    if (response.status === "success" && response.data) {
       this.setToken(response.data.token);
+      this.setCurrentUser(response.data.user);
+      // Update profile data after login
+      this.syncUserToProfile(response.data.user);
       return response.data;
-    } else {
-      throw new Error(response.message || 'Login failed');
     }
+    throw new Error(response.message || "Login failed");
   }
 
-  // Get current user info with Supabase
   static async getMeSB(): Promise<User> {
-    const response = await this.request<User>('/sb/auth/me', {
-      method: 'GET',
-    });
-
-    if (response.status === 'success' && response.data) {
+    const response = await this.request<User>("/sb/auth/me", { method: "GET" });
+    if (response.status === "success" && response.data) {
+      this.setCurrentUser(response.data);
+      this.syncUserToProfile(response.data);
       return response.data;
+    }
+    throw new Error(response.message || "Failed to get user info");
+  }
+
+  // ================= PROFILE MANAGEMENT =================
+  
+  static createInitialProfile(user: User): void {
+    if (typeof window === "undefined") return;
+    
+    const initialProfile: ProfileData = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&size=150&background=4ade80&color=ffffff`,
+      bio: `Welcome to my garden! I'm ${user.name} and I love growing plants. 🌱`,
+      location: user.city || 'Not specified',
+      gardenType: 'Mixed Garden',
+      experience: 'beginner',
+      joinDate: user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long' 
+      }) : new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long' 
+      }),
+      plantsOwned: 0,
+      plantsHarvested: 0,
+      gardenScore: 100,
+      followers: 0,
+      following: 0,
+      favoritePlants: ['Basil', 'Tomato'],
+      city: user.city,
+      birth_date: user.birth_date
+    };
+
+    localStorage.setItem("profile_data", JSON.stringify(initialProfile));
+  }
+
+  static syncUserToProfile(user: User): void {
+    if (typeof window === "undefined") return;
+    
+    const existingProfile = this.getStoredProfile();
+    
+    if (existingProfile) {
+      // Update existing profile with user data
+      const updatedProfile: ProfileData = {
+        ...existingProfile,
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        location: user.city || existingProfile.location,
+        city: user.city,
+        birth_date: user.birth_date,
+        joinDate: user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long' 
+        }) : existingProfile.joinDate
+      };
+      
+      localStorage.setItem("profile_data", JSON.stringify(updatedProfile));
     } else {
-      throw new Error(response.message || 'Failed to get user info');
+      // Create new profile if none exists
+      this.createInitialProfile(user);
     }
   }
 
-  // ========== UTILITY METHODS ==========
+  static getStoredProfile(): ProfileData | null {
+    if (typeof window === "undefined") return null;
+    
+    const profileData = localStorage.getItem("profile_data");
+    if (profileData) {
+      try {
+        return JSON.parse(profileData);
+      } catch (error) {
+        console.error('Failed to parse profile data:', error);
+        localStorage.removeItem("profile_data");
+      }
+    }
+    return null;
+  }
 
-  // Check if user is authenticated
+  static updateProfile(profileData: Partial<ProfileData>): void {
+    if (typeof window === "undefined") return;
+    
+    const existingProfile = this.getStoredProfile();
+    if (existingProfile) {
+      const updatedProfile = { ...existingProfile, ...profileData };
+      localStorage.setItem("profile_data", JSON.stringify(updatedProfile));
+    }
+  }
+
+  // ================= TASK API =================
+
+  static async getUserTasks(userId: string): Promise<{ tasks: Task[] }> {
+    const response = await this.request<{ tasks: Task[] }>(`/tasks/${userId}`, {
+      method: "GET",
+    });
+    if (response.status === "success" && response.data) {
+      return response.data;
+    }
+    throw new Error(response.message || "Failed to get tasks");
+  }
+
+  static async createTask(
+    userId: string,
+    task: Omit<Task, "id" | "userId" | "completed">
+  ): Promise<{ task: Task }> {
+    const response = await this.request<{ task: Task }>(`/tasks`, {
+      method: "POST",
+      body: JSON.stringify({ ...task, userId }),
+    });
+    if (response.status === "success" && response.data) {
+      return response.data;
+    }
+    throw new Error(response.message || "Failed to create task");
+  }
+
+  static async completeTask(taskId: string): Promise<void> {
+    const response = await this.request(`/tasks/${taskId}/complete`, {
+      method: "PUT",
+    });
+    if (response.status !== "success") {
+      throw new Error(response.message || "Failed to complete task");
+    }
+  }
+
+  static async getCalendarTasks(
+    userId: string
+  ): Promise<{ tasks: Record<string, any> }> {
+    const response = await this.request<{ tasks: Record<string, any> }>(
+      `/calendar/${userId}`,
+      { method: "GET" }
+    );
+    if (response.status === "success" && response.data) {
+      return response.data;
+    }
+    throw new Error(response.message || "Failed to get calendar tasks");
+  }
+
+  // ================= UTILITY =================
   static isAuthenticated(): boolean {
     return !!this.token;
   }
-
-  // Logout user
+  
   static logout(): void {
     this.clearToken();
   }
 }
 
-// services/auth.ts - Authentication helper functions
+// =================================================
+// ============== AUTH SERVICE WRAPPER =============
+// =================================================
+
 export const authService = {
-  // Register user (defaulting to Supabase, change to PG if needed)
-  async register(userData: RegisterDTO): Promise<{ success: boolean; message: string; data?: LoginResponse }> {
+  async register(userData: RegisterDTO) {
     try {
-      // Change to ApiService.registerPG() if you prefer PostgreSQL
-      const response = await ApiService.registerSB(userData);
-      return {
-        success: true,
-        message: 'Registration successful!',
-        data: response,
-      };
+      const response = await ApiService.registerSB(userData); // ganti ke PG bila perlu
+      return { success: true, message: "Registration successful!", data: response };
     } catch (error: any) {
-      return {
-        success: false,
-        message: error.message || 'Registration failed',
-      };
+      return { success: false, message: error.message || "Registration failed" };
     }
   },
 
-  // Login user (defaulting to Supabase, change to PG if needed)
-  async login(email: string, password: string): Promise<{ success: boolean; message: string; data?: LoginResponse }> {
+  async login(email: string, password: string) {
     try {
-      // Change to ApiService.loginPG() if you prefer PostgreSQL
-      const response = await ApiService.loginSB(email, password);
-      return {
-        success: true,
-        message: 'Login successful!',
-        data: response,
-      };
+      const response = await ApiService.loginSB(email, password); // ganti ke PG bila perlu
+      return { success: true, message: "Login successful!", data: response };
     } catch (error: any) {
-      return {
-        success: false,
-        message: error.message || 'Login failed',
-      };
+      return { success: false, message: error.message || "Login failed" };
     }
   },
 
-  // Get current user
-  async getCurrentUser(): Promise<{ success: boolean; message: string; data?: User }> {
+  async getCurrentUser() {
     try {
-      // Change to ApiService.getMePG() if you prefer PostgreSQL
-      const response = await ApiService.getMeSB();
+      // Try to get from memory first
+      const memoryUser = ApiService.getCurrentUser();
+      if (memoryUser) {
+        return {
+          success: true,
+          message: "User data retrieved from memory",
+          data: memoryUser,
+        };
+      }
+
+      // If not in memory, fetch from server
+      const response = await ApiService.getMeSB(); // ganti ke PG bila perlu
       return {
         success: true,
-        message: 'User data retrieved successfully',
+        message: "User data retrieved successfully",
         data: response,
       };
     } catch (error: any) {
-      return {
-        success: false,
-        message: error.message || 'Failed to get user info',
-      };
+      return { success: false, message: error.message || "Failed to get user info" };
     }
   },
 
-  // Logout user
-  logout(): void {
+  logout() {
     ApiService.logout();
   },
-
-  // Check authentication status
-  isAuthenticated(): boolean {
+  
+  isAuthenticated() {
     return ApiService.isAuthenticated();
   },
-};
 
-// utils/storage.ts - Local storage utilities
-export const storageService = {
-  // Save user data to local storage
-  saveUser(user: User): void {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('user_data', JSON.stringify(user));
-    }
+  // Profile methods
+  getProfile(): ProfileData | null {
+    return ApiService.getStoredProfile();
   },
 
-  // Get user data from local storage
+  updateProfile(profileData: Partial<ProfileData>) {
+    ApiService.updateProfile(profileData);
+  },
+
+  syncUserToProfile() {
+    const user = ApiService.getCurrentUser();
+    if (user) {
+      ApiService.syncUserToProfile(user);
+    }
+  }
+};
+
+// =================================================
+// ============== STORAGE SERVICE ==================
+// =================================================
+
+export const storageService = {
+  saveUser(user: User): void {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("user_data", JSON.stringify(user));
+      // Also sync to profile
+      ApiService.syncUserToProfile(user);
+    }
+  },
+  
   getUser(): User | null {
-    if (typeof window !== 'undefined') {
-      const userData = localStorage.getItem('user_data');
+    if (typeof window !== "undefined") {
+      const userData = localStorage.getItem("user_data");
       return userData ? JSON.parse(userData) : null;
     }
     return null;
   },
-
-  // Remove user data from local storage
+  
   removeUser(): void {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('user_data');
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("user_data");
     }
   },
-
-  // Clear all auth data
+  
   clearAll(): void {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user_data');
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user_data");
+      localStorage.removeItem("profile_data");
     }
   },
 };
 
-// Initialize API service
+// =================================================
+// ============ EXPORT CONVENIENCE =================
+// =================================================
+
 ApiService.init();
 
-// Export convenience functions for your existing code
 export const registerUser = authService.register;
 export const loginUser = authService.login;
 export const getCurrentUser = authService.getCurrentUser;
 export const logoutUser = authService.logout;
 export const isAuthenticated = authService.isAuthenticated;
+
+// Profile exports
+export const getProfile = authService.getProfile;
+export const updateProfile = authService.updateProfile;
+export const syncUserToProfile = authService.syncUserToProfile;
+
+// Export Task API for taskStore.ts
+export const getUserTasks = ApiService.getUserTasks.bind(ApiService);
+export const createTask = ApiService.createTask.bind(ApiService);
+export const completeTask = ApiService.completeTask.bind(ApiService);
+export const getCalendarTasks = ApiService.getCalendarTasks.bind(ApiService);

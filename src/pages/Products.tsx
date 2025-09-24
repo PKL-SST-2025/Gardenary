@@ -37,15 +37,6 @@ interface Transaction {
 // Sample products data
 const sampleProducts: Product[] = [
   {
-    id: 1,
-    name: "Tomato Seeds",
-    price: 25000,
-    image: "tomatoseeds.png",
-    description: "High-quality tomato seeds for your garden",
-    category: 'seeds',
-    stock: 50
-  },
-  {
     id: 2,
     name: "Garden Shovel",
     price: 75000,
@@ -53,15 +44,6 @@ const sampleProducts: Product[] = [
     description: "Durable steel garden shovel",
     category: 'tools',
     stock: 25
-  },
-  {
-    id: 3,
-    name: "Organic Fertilizer",
-    price: 45000,
-    image: "https://images.unsplash.com/photo-1585838888915-6440a3f5b530?w=300&h=300&fit=crop",
-    description: "Organic fertilizer for healthy plant growth",
-    category: 'fertilizer',
-    stock: 30
   },
   {
     id: 4,
@@ -81,15 +63,6 @@ const sampleProducts: Product[] = [
     category: 'seeds',
     stock: 40
   },
-  {
-    id: 6,
-    name: "Watering Can",
-    price: 55000,
-    image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=300&h=300&fit=crop",
-    description: "Metal watering can with long spout",
-    category: 'tools',
-    stock: 15
-  }
 ];
 
 const Products: Component = () => {

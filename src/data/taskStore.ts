@@ -1,6 +1,5 @@
 import { createSignal } from "solid-js";
 import { getUserTasks, createTask, completeTask, getCalendarTasks } from "../services/api";
-import { user } from "./authStore";
 
 export interface Task {
     id: string;
@@ -15,54 +14,51 @@ export interface Task {
 const [tasks, setTasks] = createSignal<Task[]>([]);
 const [calendarTasks, setCalendarTasks] = createSignal<Record<string, any>>({});
 
-export const fetchUserTasks = async () => {
-    const currentUser = user();
-    if (!currentUser) return;
-
+// Ambil semua task user
+export const fetchUserTasks = async (userId: string, token: string) => {
     try {
-        const data = await getUserTasks(currentUser.id, currentUser.token);
+        const data = await getUserTasks(userId, token);
         setTasks(data.tasks);
     } catch (error) {
-        console.error('Failed to fetch tasks:', error);
+        console.error("Failed to fetch tasks:", error);
     }
 };
 
-export const addTask = async (taskData: Omit<Task, 'id' | 'userId' | 'completed'>) => {
-    const currentUser = user();
-    if (!currentUser) return;
-
+// Tambah task baru
+export const addTask = async (
+    userId: string,
+    token: string,
+    taskData: Omit<Task, "id" | "userId" | "completed">
+) => {
     try {
-        const data = await createTask(currentUser.id, taskData, currentUser.token);
+        const data = await createTask(userId, taskData, token);
         setTasks([...tasks(), data.task]);
     } catch (error) {
-        console.error('Failed to add task:', error);
+        console.error("Failed to add task:", error);
     }
 };
 
-export const markTaskComplete = async (taskId: string) => {
-    const currentUser = user();
-    if (!currentUser) return;
-
+// Tandai task selesai
+export const markTaskComplete = async (taskId: string, token: string) => {
     try {
-        await completeTask(taskId, currentUser.token);
-        // Update local state
-        setTasks(tasks().map(task => 
-            task.id === taskId ? { ...task, completed: true } : task
-        ));
+        await completeTask(taskId, token);
+        setTasks(
+            tasks().map((task) =>
+                task.id === taskId ? { ...task, completed: true } : task
+            )
+        );
     } catch (error) {
-        console.error('Failed to complete task:', error);
+        console.error("Failed to complete task:", error);
     }
 };
 
-export const fetchCalendarTasks = async () => {
-    const currentUser = user();
-    if (!currentUser) return;
-
+// Ambil task untuk kalender
+export const fetchCalendarTasks = async (userId: string, token: string) => {
     try {
-        const data = await getCalendarTasks(currentUser.id, currentUser.token);
+        const data = await getCalendarTasks(userId, token);
         setCalendarTasks(data.tasks);
     } catch (error) {
-        console.error('Failed to fetch calendar tasks:', error);
+        console.error("Failed to fetch calendar tasks:", error);
     }
 };
 

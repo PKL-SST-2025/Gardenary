@@ -5,6 +5,7 @@ import SignupPage from './pages/SignupPage';
 import Login from './pages/Login';
 import Dashboard from "./pages/Dashboard";
 import Add from "./pages/Add";
+import List from "./pages/List";
 import Logout from "./pages/Logout";
 import Growth from "./pages/Growth";
 import Profile from "./pages/Profile";
@@ -15,14 +16,18 @@ import MyOrders from "./pages/MyOrders";
 import TransactionHistory from "./pages/TransactionHistory";
 import { loginUser as apiLogin, registerUser as apiRegister } from "./services/api";
 
+import AuthGuard from "./pages/AuthGuard";
+
 const App: Component = () => {
   return (
     <Router>
+      {/* Public routes */}
       <Route path="/" component={Home} />
       <Route path="/signup" component={SignupPage} />
       <Route path="/login" component={Login} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/add" component={Add} />
+      <Route path="/list" component={List} />
       <Route path="/logout" component={Logout} />
       <Route path="/growth" component={Growth} />
       <Route path="/profile" component={Profile} />
@@ -31,10 +36,27 @@ const App: Component = () => {
       <Route path="/products" component={Products} />
       <Route path="/my-orders" component={MyOrders} />
       <Route path="/transactions" component={TransactionHistory} />
-      {/* Optional fallback */}
-      <Route path="*" component={Home} />
+
+      {/* Protected routes */}
+      <Route
+        path="/dashboard"
+        component={() => (
+          <AuthGuard>
+            <Dashboard />
+          </AuthGuard>
+        )}
+      />
+      <Route
+        path="/profile"
+        component={() => (
+          <AuthGuard>
+            <Profile />
+          </AuthGuard>
+        )}
+      />
     </Router>
   );
 };
+
 
 export default App;

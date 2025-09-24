@@ -45,46 +45,6 @@ const MyOrders: Component = () => {
   onMount(() => {
     const sampleOrders: Order[] = [
       {
-        id: "ORD-2024-001",
-        items: [
-          {
-            product: {
-              id: 1,
-              name: "Tomato Seeds",
-              price: 25000,
-              image: "https://images.unsplash.com/photo-1592841200221-a6898f65c2af?w=300&h=300&fit=crop",
-              description: "High-quality tomato seeds",
-              category: 'seeds',
-              stock: 50
-            },
-            quantity: 2
-          },
-          {
-            product: {
-              id: 3,
-              name: "Organic Fertilizer",
-              price: 45000,
-              image: "https://images.unsplash.com/photo-1585838888915-6440a3f5b530?w=300&h=300&fit=crop",
-              description: "Organic fertilizer for healthy plant growth",
-              category: 'fertilizer',
-              stock: 30
-            },
-            quantity: 1
-          }
-        ],
-        total: 95000,
-        date: "2024-12-25T10:30:00.000Z",
-        status: 'delivered',
-        customerInfo: {
-          name: "Ahmad Wijaya",
-          email: "ahmad@example.com",
-          address: "Jl. Sudirman No. 123, Purwokerto",
-          phone: "08123456789"
-        },
-        trackingNumber: "JNE123456789",
-        estimatedDelivery: "2024-12-27"
-      },
-      {
         id: "ORD-2024-002",
         items: [
           {
